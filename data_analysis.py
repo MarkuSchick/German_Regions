@@ -35,12 +35,5 @@ def aggregate_district_data(year):
     district_df.to_csv(path_or_buf = "districts/districts_{}.csv".format(year), index=True)
 
 if __name__ == "__main__":
-    #for year in (1988, 1993):
-    for year in (2000, 2019):
-        
-        #aggregate_district_data(year)
-
-    
-
-    
-
+    for year in range(1985, 2020):
+        aggregate_district_data(year)
