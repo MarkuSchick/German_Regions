@@ -127,3 +127,12 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# data folders
+municipalities/
+mappings/
+districts/
+raw_data/
+
+# visual studio code
+.vscode/

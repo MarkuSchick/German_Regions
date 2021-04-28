@@ -1,0 +1,15 @@
+name: regional_inequality
+
+
+dependencies:
+  - conda-build
+  - ipykernel
+  - jupyterlab
+  - pandas
+  - pip
+  - unidecode
+  - requests
+
+  - pip:
+
+    - pre-commit
