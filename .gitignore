@@ -136,3 +136,6 @@ raw_data/
 
 # visual studio code
 .vscode/
+
+german_regions
+data/

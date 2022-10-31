@@ -1,5 +1,8 @@
 import pandas as pd
 
+from config import DATA, DATA_MAPPINGS, DATA_MISC, DATA_MUNICIPALITIES, DATA_RAW
+
+
 def load_excel_data(year):
     """ loads raw excel downloaded from destatis and returns as dataframe
     Args:
@@ -18,7 +21,7 @@ def load_excel_data(year):
     
 
     # read in data 
-    df = pd.read_excel(r"destatis_data/municipalities{}.xls".format(year), 
+    df = pd.read_excel(DATA_RAW / r"municipalities{}.xls".format(year), 
     sheet_name=data_sheet, header = None)
     
     # exctract column names from first 5 rows
@@ -139,20 +142,20 @@ def save_regional_level(data, year):
         region_df[regional_level_name + "_name"] = region_df[regional_level_name + "_name"].str.replace('"', '').astype(str)
         
         # save datafile
-        region_df.to_csv(path_or_buf = "mappings/{}_{}.csv".format(regional_level_name, year), index=False)
+        region_df.to_csv(path_or_buf = DATA_MAPPINGS / "{}_{}.csv".format(regional_level_name, year), index=False)
 
 def handle_special_cases(df, year):
     if year==2016:
         # population estimate is unreliable for this years (perhaps because of refugee inflows)
         df_fraudulent = df.loc[df["municipality_name"].str.contains("4"),:]
-        df_fraudulent.to_csv(path_or_buf = "datasets/municipalities_{}_fraudulent.csv".format(year), index=False)
+        df_fraudulent.to_csv(path_or_buf = DATA_MISC / "municipalities_{}_fraudulent.csv".format(year), index=False)
         df = df.drop(df_fraudulent.index, axis="index")
     elif year == 2010:
         # handle German/Luxemburg shared territory since government district is missing here (year==2015)
         region_name_columns = [column for column in df.columns if column in ("state", "gov_district", "district", "municipality_assoc", "municipality")]    
         is_missing = df[region_name_columns].isna().any(axis="columns")
         if is_missing.any(): 
-            print("German/Luxemburg shared territory \n",  df.loc[is_missing, : ])
+            print("Dropping German/Luxemburg shared territory \n",  df.loc[is_missing, : ])
             df = df.drop(df.index[is_missing][0], axis="index")
     else:
         pass
@@ -182,75 +185,5 @@ def save_municipality_level(df, year):
 
 
     # save dataset
-    df.to_csv(path_or_buf = "datasets/municipalities_{}.csv".format(year), index=False)
+    df.to_csv(path_or_buf = DATA_MUNICIPALITIES / "municipalities_{}.csv".format(year), index=False)
 
-
-"""
-                if regional_level_name == "state":
-                    # governing district, district, municipality association and municipality are missing
-                    region_level_index = data[["gov_district", "district", "municipality_assoc", "municipality"]].isna().all(axis="columns") 
-                    return region_level_index
-
-                elif regional_level_name == "gov_district":
-                    regional_level_mat = pd.concat([
-                        data[["district", "municipality_assoc", "municipality"]].isna().all(axis="columns"), # district, municipality association and municipality are missing 
-                        ~data[["state", "gov_district"]].isna().any(axis="columns")  # state is not missing
-                        ], axis  = "columns")
-                    region_level_index = regional_level_mat.all(axis="columns")
-                    return region_level_index
-                
-                elif regional_level_name == "district":
-                    regional_level_mat = pd.concat([
-                        data[["municipality_assoc", "municipality"]].isna().all(axis="columns"), # municipality association and municipality are missing 
-                        ~data[["state", "gov_district", "district"]].isna().any(axis="columns") # state and government district are not missing
-                        ], axis  = "columns")  
-                    region_level_index = regional_level_mat.all(axis="columns")
-                    return region_level_index
-                
-                elif regional_level_name == "municipality_assoc":
-                    regional_level_mat = pd.concat([
-                        data[["municipality"]].isna(), # municipality are missing 
-                        ~data[["state", "gov_district", "district", "municipality_assoc"]].isna().any(axis="columns") # state, government district and district are not missing
-                        ], axis  = "columns")
-                    region_level_index = regional_level_mat.all(axis="columns")   
-                    return region_level_index        
-                else:
-                    assert False, "Regional identifier{} is unknown".format(regional_level_name)
-
-            region_level_index = get_region_level_index(data, regional_level_name)
-            out = dict(zip(
-                data.loc[region_level_index, regional_level_name], 
-                data.loc[region_level_index, "municipality_name"]
-                ))
-            return out
-"""
-
-"""
-
-    regional_levels = pd.Categorical(["municipality", "district", "state"], ordered=True, categories=["municipality", "district", "state"])
-
-    lower_levels = regional_levels[regional_levels<region_level_name]
-    higher_levels = regional_levels[regional_levels>=region_level_name] # weakly higher
-    
-    
-    if higher_levels.size == 1 : # only 1 weakly higher level (region level name is state)
-        region_level_index = data[lower_levels].isna().all(axis="columns") 
-        return region_level_index
-
-    elif lower_levels.size > 1: # regional levels is gov_district
-        regional_level_mat = pd.concat([
-        data[lower_levels].isna().all(axis="columns"), # municipality association and municipality are missing 
-        ~data[higher_levels].isna().any(axis="columns") # state and government district are not missing
-        ], axis  = "columns")  
-        region_level_index = regional_level_mat.all(axis="columns")
-
-    elif lower_levels.size == 1: # region level is district
-        regional_level_mat = pd.concat([
-        data[lower_levels].isna(), # municipality are missing 
-        ~data[higher_levels].isna().any(axis="columns") # state, government district and district are not missing
-        ], axis  = "columns")
-        region_level_index = regional_level_mat.all(axis="columns")   
-    
-    else:
-        assert False, "Regional identifier{} is unknown".format(region_level_name)
-"""
